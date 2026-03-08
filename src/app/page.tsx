@@ -5,13 +5,30 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (email.trim()) {
-      router.push("/vente");
+    if (!email.trim()) return;
+
+    setLoading(true);
+    setError("");
+
+    const res = await fetch("/api/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!res.ok) {
+      setError("Une erreur est survenue. Veuillez réessayer.");
+      setLoading(false);
+      return;
     }
+
+    router.push("/vente");
   }
 
   return (
@@ -36,11 +53,13 @@ export default function Home() {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-black focus:ring-1 focus:ring-black"
           />
+          {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             type="submit"
-            className="w-full cursor-pointer rounded-lg bg-black py-3 text-base font-semibold text-white transition hover:bg-gray-800"
+            disabled={loading}
+            className="w-full cursor-pointer rounded-lg bg-black py-3 text-base font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Accéder gratuitement
+            {loading ? "Inscription..." : "Accéder gratuitement"}
           </button>
         </form>
 
